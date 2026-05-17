@@ -482,3 +482,7 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+/Server/obj/Debug/DesignTimeResolveAssemblyReferencesInput.cache
+/Server/obj/Debug/DesignTimeResolveAssemblyReferencesInput.cache
+/Common/obj/Debug/DesignTimeResolveAssemblyReferencesInput.cache
+/Client/obj/Debug/DesignTimeResolveAssemblyReferencesInput.cache
