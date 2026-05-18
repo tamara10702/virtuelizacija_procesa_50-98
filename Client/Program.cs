@@ -21,7 +21,7 @@ namespace Client
             var samples = LoadCsv(csvPath, invalidLogPath);
             Console.WriteLine($"Ucitano validnih redova: {samples.Count}");
 
-            ChannelFactory<IWeather> factory = new ChannelFactory<IWeather>("WeatherEndpoint");
+            ChannelFactory<IWeather> factory = new ChannelFactory<IWeather>("WeatherService");
             IWeather proxy = factory.CreateChannel();
 
             try
@@ -50,7 +50,6 @@ namespace Client
             catch(Exception ex)
             {
                 Console.WriteLine($"Greska pri sesiji: {ex.Message}");
-                return;
             }
 
             Console.WriteLine("Test je zavrsen.");
