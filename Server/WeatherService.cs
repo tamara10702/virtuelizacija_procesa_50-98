@@ -57,7 +57,7 @@ namespace Server
                 throw new FaultException<ValidationFault>(new ValidationFault("Temperatura je van realisticnog opsega."));
             }
 
-            if (sample.Tpot < -100 || sample.Tpot > 60)
+            if (sample.Tpot < 173 || sample.Tpot > 333)
             {
                 throw new FaultException<ValidationFault>(new ValidationFault("Tpot je van realisticnog opsega."));
             }
