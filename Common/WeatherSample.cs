@@ -11,13 +11,13 @@ namespace Common
     [DataContract]
     public class WeatherSample
     {
-        double t;
-        double pressure;
-        double tpot;
-        double tdew;
-        double vpmax;
-        double vpdef;
-        double vpact;
+        double t;           // Temperatura
+        double pressure;    // Pritisak
+        double tpot;        // Potencijalna temperatura
+        double tdew;        // Temperatura tacke rose
+        double vpmax;       // Maks pritisak vodene pare
+        double vpdef;       // Deficit pritiska vodene pare
+        double vpact;       // Stvarni pritisak vodene pare
         DateTime date;
 
         public WeatherSample() { }

@@ -8,19 +8,26 @@ using System.ServiceModel;
 
 namespace Server
 {
+    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single,
+                     ConcurrencyMode = ConcurrencyMode.Multiple)]
     public class WeatherService : IWeather
     {
         private static bool sessionActive = false;
+        private static readonly object lockObject = new object();
 
         public void EndSession()
         {
-            if (!sessionActive)
+            lock (lockObject)
             {
-                throw new FaultException<DataFormatFault>(new DataFormatFault("Sesija nije pokrenuta. Ne možete završiti sesiju."));
+                if (!sessionActive)
+                {
+                    throw new FaultException<DataFormatFault>(new DataFormatFault("Sesija nije pokrenuta. Ne možete završiti sesiju."));
+                }
+
+                sessionActive = false;
             }
 
-            sessionActive = false;
-            Console.WriteLine($"Sesija zavrsena.");
+            Console.WriteLine("Sesija zavrsena.");
         }
 
         public void PushSample(WeatherSample sample)
@@ -40,7 +47,42 @@ namespace Server
                 throw new FaultException<DataFormatFault>(new DataFormatFault("Datum nije postavljen."));
             }
 
-            // ima jos da se implementira...
+            if (sample.Pressure <= 0)
+            {
+                throw new FaultException<ValidationFault>(new ValidationFault("Pritisak mora biti veci od 0."));
+            }
+
+            if (sample.T < -100 || sample.T > 60)
+            {
+                throw new FaultException<ValidationFault>(new ValidationFault("Temperatura je van realisticnog opsega."));
+            }
+
+            if (sample.Tpot < -100 || sample.Tpot > 60)
+            {
+                throw new FaultException<ValidationFault>(new ValidationFault("Tpot je van realisticnog opsega."));
+            }
+
+            if (sample.Tdew < -100 || sample.Tdew > 60)
+            {
+                throw new FaultException<ValidationFault>(new ValidationFault("Tdew je van realisticnog opsega."));
+            }
+
+            if (sample.VPmax < 0 || sample.VPmax > 100)
+            {
+                throw new FaultException<ValidationFault>(new ValidationFault("VPmax je van realisticnog opsega."));
+            }
+
+            if (sample.VPdef < 0 || sample.VPdef > 100)
+            {
+                throw new FaultException<ValidationFault>(new ValidationFault("VPdef je van realisticnog opsega."));
+            }
+
+            if (sample.VPact < 0 || sample.VPact > 100)
+            {
+                throw new FaultException<ValidationFault>(new ValidationFault("VPact je van realisticnog opsega."));
+            }
+
+            Console.WriteLine($"Sample primljen: T={sample.T}, Pressure={sample.Pressure}, Date={sample.Date}");
         }
 
         public void StartSession(string meta)
@@ -50,12 +92,15 @@ namespace Server
                 throw new FaultException<DataFormatFault>(new DataFormatFault("Meta podaci ne smeju biti prazni."));
             }
 
-            if (sessionActive)
+            lock (lockObject)
             {
-                throw new FaultException<DataFormatFault>(new DataFormatFault("Sesija je vec aktivna."));
+                if (sessionActive)
+                {
+                    throw new FaultException<DataFormatFault>(new DataFormatFault("Sesija je vec aktivna."));
+                }
+                sessionActive = true;
             }
-
-            sessionActive = true;
+            
             Console.WriteLine($"Sesija zapoceta: {meta}");
         }
     }
