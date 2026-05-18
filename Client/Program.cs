@@ -75,8 +75,8 @@ namespace Client
                         var sample = new WeatherSample
                         {
                             Date = DateTime.Parse(cols[0], CultureInfo.InvariantCulture),
-                            T = double.Parse(cols[1], CultureInfo.InvariantCulture),
-                            Pressure = double.Parse(cols[2], CultureInfo.InvariantCulture),
+                            Pressure = double.Parse(cols[1], CultureInfo.InvariantCulture),
+                            T = double.Parse(cols[2], CultureInfo.InvariantCulture),
                             Tpot = double.Parse(cols[3], CultureInfo.InvariantCulture),
                             Tdew = double.Parse(cols[4], CultureInfo.InvariantCulture),
                             VPmax = double.Parse(cols[5], CultureInfo.InvariantCulture),
