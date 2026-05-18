@@ -13,8 +13,8 @@ namespace Client
     {
         static void Main(string[] args)
         {
-            string csvPath = "weather_samples.csv";
-            string invalidLogPath = "invalid_samples_log.txt";
+            string csvPath = @"C:\Users\User\OneDrive\Desktop\psi\6. semestar\virtuelizacija\projekatFajlovi\cleaned_weather.csv";
+            string invalidLogPath = @"C:\Users\User\OneDrive\Desktop\psi\6. semestar\virtuelizacija\projekatFajlovi\invalid_samples_log.txt";
 
             var samples = LoadCsv(csvPath, invalidLogPath);
             Console.WriteLine($"Ucitano validnih redova: {samples.Count}");
