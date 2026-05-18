@@ -47,6 +47,8 @@
     <Compile Include="IWeather.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ValidationFault.cs" />
+    <Compile Include="WeatherFileReader.cs" />
+    <Compile Include="WeatherFileWriter .cs" />
     <Compile Include="WeatherSample.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
