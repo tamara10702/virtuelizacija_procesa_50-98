@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Common;
 using System.IO;
 using System.Globalization;
+using System.Security.Authentication.ExtendedProtection;
+using System.ServiceModel;
 
 namespace Client
 {
@@ -18,6 +20,38 @@ namespace Client
 
             var samples = LoadCsv(csvPath, invalidLogPath);
             Console.WriteLine($"Ucitano validnih redova: {samples.Count}");
+
+            ChannelFactory<IWeather> factory = new ChannelFactory<IWeather>("WeatherEndpoint");
+            IWeather proxy = factory.CreateChannel();
+
+            try
+            {
+                proxy.StartSession("Test session metadata");
+
+                foreach (var sample in samples)
+                {
+                    try
+                    {
+                        proxy.PushSample(sample);
+                        Console.WriteLine($"Sample poslat: {sample.Date} T={sample.T} Pressure={sample.Pressure}");
+                    }
+                    catch (FaultException<DataFormatFault> ex)
+                    {
+                        Console.WriteLine($"DataFormatFault: {ex.Detail.Message}");
+                    }
+                    catch (FaultException<ValidationFault> ex)
+                    {
+                        Console.WriteLine($"ValidationFault: {ex.Detail.Message}");
+                    }
+                }
+
+                proxy.EndSession();
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"Greska pri sesiji: {ex.Message}");
+                return;
+            }
 
             Console.WriteLine("Test je zavrsen.");
             Console.ReadKey();
