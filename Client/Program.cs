@@ -79,9 +79,10 @@ namespace Client
                             T = double.Parse(cols[2], CultureInfo.InvariantCulture),
                             Tpot = double.Parse(cols[3], CultureInfo.InvariantCulture),
                             Tdew = double.Parse(cols[4], CultureInfo.InvariantCulture),
-                            VPmax = double.Parse(cols[5], CultureInfo.InvariantCulture),
-                            VPdef = double.Parse(cols[6], CultureInfo.InvariantCulture),
+                            VPmax = double.Parse(cols[6], CultureInfo.InvariantCulture),
                             VPact = double.Parse(cols[7], CultureInfo.InvariantCulture)
+                            VPdef = double.Parse(cols[8], CultureInfo.InvariantCulture),
+
                         };
                         samples.Add(sample);
                         samplesRead++;
