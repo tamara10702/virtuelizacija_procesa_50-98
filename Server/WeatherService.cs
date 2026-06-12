@@ -86,39 +86,39 @@ namespace Server
                 throw new FaultException<DataFormatFault>(new DataFormatFault("Datum nije postavljen."));
             }
 
-            if (sample.Pressure <= 0)
+            try
             {
-                throw new FaultException<ValidationFault>(new ValidationFault("Pritisak mora biti veci od 0."));
-            }
+                if (sample.Pressure <= 0)
+                    throw new FaultException<ValidationFault>(new ValidationFault("Pritisak mora biti veci od 0."));
 
-            if (sample.T < -100 || sample.T > 60)
-            {
-                throw new FaultException<ValidationFault>(new ValidationFault("Temperatura je van realisticnog opsega."));
-            }
+                if (sample.T < -100 || sample.T > 60)
+                    throw new FaultException<ValidationFault>(new ValidationFault("Temperatura je van realisticnog opsega."));
 
-            if (sample.Tpot < 173 || sample.Tpot > 333)
-            {
-                throw new FaultException<ValidationFault>(new ValidationFault("Tpot je van realisticnog opsega."));
-            }
+                if (sample.Tpot < 173 || sample.Tpot > 333)
+                    throw new FaultException<ValidationFault>(new ValidationFault("Tpot je van realisticnog opsega."));
 
-            if (sample.Tdew < -100 || sample.Tdew > 60)
-            {
-                throw new FaultException<ValidationFault>(new ValidationFault("Tdew je van realisticnog opsega."));
-            }
+                if (sample.Tdew < -100 || sample.Tdew > 60)
+                    throw new FaultException<ValidationFault>(new ValidationFault("Tdew je van realisticnog opsega."));
 
-            if (sample.VPmax < 0 || sample.VPmax > 100)
-            {
-                throw new FaultException<ValidationFault>(new ValidationFault("VPmax je van realisticnog opsega."));
-            }
+                if (sample.VPmax < 0 || sample.VPmax > 100)
+                    throw new FaultException<ValidationFault>(new ValidationFault("VPmax je van realisticnog opsega."));
 
-            if (sample.VPdef < 0 || sample.VPdef > 100)
-            {
-                throw new FaultException<ValidationFault>(new ValidationFault("VPdef je van realisticnog opsega."));
-            }
+                if (sample.VPdef < 0 || sample.VPdef > 100)
+                    throw new FaultException<ValidationFault>(new ValidationFault("VPdef je van realisticnog opsega."));
 
-            if (sample.VPact < 0 || sample.VPact > 100)
+                if (sample.VPact < 0 || sample.VPact > 100)
+                    throw new FaultException<ValidationFault>(new ValidationFault("VPact je van realisticnog opsega."));
+            }
+            catch (FaultException<ValidationFault> ex)
             {
-                throw new FaultException<ValidationFault>(new ValidationFault("VPact je van realisticnog opsega."));
+                lock (lockObject)
+                {
+                    string rejectLine = $"{sample.Date},{sample.T},{sample.Pressure},{sample.Tpot},{sample.Tdew},{sample.VPmax},{sample.VPdef},{sample.VPact},{ex.Detail.Message}";
+                    rejectsWriter?.WriteLine(rejectLine);
+                }
+
+                Console.WriteLine($"Odbacen uzorak: {ex.Detail.Message}");
+                throw;
             }
 
             lock (lockObject)
