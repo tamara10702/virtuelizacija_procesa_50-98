@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.ServiceModel;
 using System.IO;
+using System.Configuration;
+using System.Globalization;
 
 namespace Server
 {
@@ -20,6 +22,26 @@ namespace Server
 
         private static bool sessionActive = false;
         private static readonly object lockObject = new object();
+
+        public delegate void WeatherEventHandler(object sender, WeatherEventArgs e);
+
+        public event WeatherEventHandler OnTransferStarted;
+        public event WeatherEventHandler OnSampleReceived;
+        public event WeatherEventHandler OnTransferCompleted;
+        public event WeatherEventHandler OnWarningRaised;
+
+        private readonly double P_THRESHOLD;
+        private readonly double VPact_THRESHOLD;
+        private readonly double VPdef_THRESHOLD;
+        private readonly double MEAN_DEVIATION;
+
+        public WeatherService()
+        {
+            P_THRESHOLD = double.Parse(ConfigurationManager.AppSettings["P_THRESHOLD"] ?? "5", CultureInfo.InvariantCulture);
+            VPact_THRESHOLD = double.Parse(ConfigurationManager.AppSettings["VPact_THRESHOLD"] ?? "3", CultureInfo.InvariantCulture);
+            VPdef_THRESHOLD = double.Parse(ConfigurationManager.AppSettings["VPdef_THRESHOLD"] ?? "3", CultureInfo.InvariantCulture);
+            MEAN_DEVIATION = double.Parse(ConfigurationManager.AppSettings["MEAN_DEVIATION"] ?? "0.25", CultureInfo.InvariantCulture);
+        }
 
         public void EndSession()
         {
@@ -38,6 +60,7 @@ namespace Server
             }
 
             Console.WriteLine("Zavrsen prenos.Sesija zavrsena.");
+            OnTransferCompleted?.Invoke(this, new WeatherEventArgs(0, "Sesija zavrsena"));
         }
 
         public void PushSample(WeatherSample sample)
@@ -97,6 +120,7 @@ namespace Server
                 string csvLine = $"{sample.Date},{sample.T},{sample.Pressure},{sample.Tpot},{sample.Tdew},{sample.VPmax},{sample.VPdef},{sample.VPact}";
                 dataWriter?.WriteLine(csvLine);
             }
+            OnSampleReceived?.Invoke(this, new WeatherEventArgs(sample.Pressure, "Sample primljen"));
             Console.WriteLine($"Prenos u toku... Sample primljen: T={sample.T}, Pressure={sample.Pressure}, Date={sample.Date}");
         }
 
@@ -134,8 +158,10 @@ namespace Server
                 }
                 sessionActive = true;
             }
-            
-            Console.WriteLine($"Sesija zapoceta: {meta}");
+
+            //Console.WriteLine($"Sesija zapoceta: {meta}");
+            OnTransferStarted?.Invoke(this, new WeatherEventArgs(0, $"Sesija zapoceta: {meta}"));
+
         }
     }
 }
