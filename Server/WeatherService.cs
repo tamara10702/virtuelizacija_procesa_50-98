@@ -23,12 +23,16 @@ namespace Server
         private static bool sessionActive = false;
         private static readonly object lockObject = new object();
 
+        private static List<WeatherSample> samples = new List<WeatherSample>();
+
         public delegate void WeatherEventHandler(object sender, WeatherEventArgs e);
 
         public event WeatherEventHandler OnTransferStarted;
         public event WeatherEventHandler OnSampleReceived;
         public event WeatherEventHandler OnTransferCompleted;
         public event WeatherEventHandler OnWarningRaised;
+        public event WeatherEventHandler OnPressureSpike;
+        public event WeatherEventHandler OnOutOfBandWarning;
 
         private readonly double P_THRESHOLD;
         private readonly double VPact_THRESHOLD;
@@ -119,9 +123,39 @@ namespace Server
             {
                 string csvLine = $"{sample.Date},{sample.T},{sample.Pressure},{sample.Tpot},{sample.Tdew},{sample.VPmax},{sample.VPdef},{sample.VPact}";
                 dataWriter?.WriteLine(csvLine);
+                samples.Add(sample);
             }
+
             OnSampleReceived?.Invoke(this, new WeatherEventArgs(sample.Pressure, "Sample primljen"));
             Console.WriteLine($"Prenos u toku... Sample primljen: T={sample.T}, Pressure={sample.Pressure}, Date={sample.Date}");
+
+            AnalyzeSample(sample);
+        }
+
+        private void AnalyzeSample(WeatherSample current)
+        {
+            if (samples.Count < 2)
+                return;
+
+            var previous = samples[samples.Count - 2];
+
+            double deltaP = current.Pressure - previous.Pressure;
+            if (Math.Abs(deltaP) > P_THRESHOLD)
+            {
+                string direction = deltaP > 0 ? "iznad ocekivanog" : "ispod ocekivanog";
+                string msg = $"Nagla promena pritiska ({direction}), deltaP={deltaP:F2}";
+                OnPressureSpike?.Invoke(this, new WeatherEventArgs(current.Pressure, msg));
+                OnWarningRaised?.Invoke(this, new WeatherEventArgs(current.Pressure, msg));
+            }
+
+            double pMean = samples.Average(s => s.Pressure);
+            if (current.Pressure < (1 - MEAN_DEVIATION) * pMean || current.Pressure > (1 + MEAN_DEVIATION) * pMean)
+            {
+                string direction = current.Pressure < pMean ? "ispod ocekivane vrednosti" : "iznad ocekivane vrednosti";
+                string msg = $"Pritisak van pojasa proseka ({direction}), P={current.Pressure:F2}, Pmean={pMean:F2}";
+                OnOutOfBandWarning?.Invoke(this, new WeatherEventArgs(current.Pressure, msg));
+                OnWarningRaised?.Invoke(this, new WeatherEventArgs(current.Pressure, msg));
+            }
         }
 
         public void StartSession(string meta)
@@ -156,6 +190,7 @@ namespace Server
                 {
                     throw new FaultException<DataFormatFault>(new DataFormatFault($"Greska pri otvaranju arhivskih fajlova: {ex.Message}"));
                 }
+                samples.Clear();
                 sessionActive = true;
             }
 

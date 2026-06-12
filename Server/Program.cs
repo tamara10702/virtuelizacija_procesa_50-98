@@ -26,6 +26,12 @@ namespace Server
             service.OnWarningRaised += (sender, e) =>
                 Console.WriteLine($"[WARNING] {e.Message}");
 
+            service.OnPressureSpike += (sender, e) =>
+                Console.WriteLine($"[PRESSURE SPIKE] {e.Message}");
+
+            service.OnOutOfBandWarning += (sender, e) =>
+                Console.WriteLine($"[OUT OF BAND] {e.Message}");
+
             host.Open();
             Console.WriteLine("Server is running. Press any key to stop.");
             Console.ReadKey();
