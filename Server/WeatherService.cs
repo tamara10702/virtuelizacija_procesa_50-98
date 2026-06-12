@@ -37,7 +37,7 @@ namespace Server
                 sessionActive = false;
             }
 
-            Console.WriteLine("Sesija zavrsena.");
+            Console.WriteLine("Zavrsen prenos.Sesija zavrsena.");
         }
 
         public void PushSample(WeatherSample sample)
@@ -97,7 +97,7 @@ namespace Server
                 string csvLine = $"{sample.Date},{sample.T},{sample.Pressure},{sample.Tpot},{sample.Tdew},{sample.VPmax},{sample.VPdef},{sample.VPact}";
                 dataWriter?.WriteLine(csvLine);
             }
-            Console.WriteLine($"Sample primljen: T={sample.T}, Pressure={sample.Pressure}, Date={sample.Date}");
+            Console.WriteLine($"Prenos u toku... Sample primljen: T={sample.T}, Pressure={sample.Pressure}, Date={sample.Date}");
         }
 
         public void StartSession(string meta)
