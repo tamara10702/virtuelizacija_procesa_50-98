@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.ServiceModel;
+using System.IO;
 
 namespace Server
 {
@@ -12,6 +13,11 @@ namespace Server
                      ConcurrencyMode = ConcurrencyMode.Multiple)]
     public class WeatherService : IWeather
     {
+        private static WeatherFileWriter dataWriter = null;
+        private static WeatherFileWriter rejectsWriter = null;
+
+        private static readonly string ARCHIVE_PATH = @"C:\Users\User\OneDrive\Desktop\psi\6. semestar\virtuelizacija\projekatFajlovi\archive";
+
         private static bool sessionActive = false;
         private static readonly object lockObject = new object();
 
@@ -23,6 +29,10 @@ namespace Server
                 {
                     throw new FaultException<DataFormatFault>(new DataFormatFault("Sesija nije pokrenuta. Ne možete završiti sesiju."));
                 }
+                dataWriter?.Dispose();
+                rejectsWriter?.Dispose();
+                dataWriter = null;
+                rejectsWriter = null;
 
                 sessionActive = false;
             }
@@ -82,6 +92,11 @@ namespace Server
                 throw new FaultException<ValidationFault>(new ValidationFault("VPact je van realisticnog opsega."));
             }
 
+            lock (lockObject)
+            {
+                string csvLine = $"{sample.Date},{sample.T},{sample.Pressure},{sample.Tpot},{sample.Tdew},{sample.VPmax},{sample.VPdef},{sample.VPact}";
+                dataWriter?.WriteLine(csvLine);
+            }
             Console.WriteLine($"Sample primljen: T={sample.T}, Pressure={sample.Pressure}, Date={sample.Date}");
         }
 
@@ -97,6 +112,25 @@ namespace Server
                 if (sessionActive)
                 {
                     throw new FaultException<DataFormatFault>(new DataFormatFault("Sesija je vec aktivna."));
+                }
+                try
+                {
+                    if (!Directory.Exists(ARCHIVE_PATH))
+                        Directory.CreateDirectory(ARCHIVE_PATH);
+
+                    string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                    string dataPath = Path.Combine(ARCHIVE_PATH, $"measurements_{timestamp}.csv");
+                    string rejectsPath = Path.Combine(ARCHIVE_PATH, $"rejects_{timestamp}.csv");
+
+                    dataWriter = new WeatherFileWriter(dataPath);
+                    dataWriter.WriteLine("Date,T,Pressure,Tpot,Tdew,VPmax,VPdef,VPact");
+
+                    rejectsWriter = new WeatherFileWriter(rejectsPath);
+                    rejectsWriter.WriteLine("Date,T,Pressure,Tpot,Tdew,VPmax,VPdef,VPact,Reason");
+                }
+                catch (Exception ex)
+                {
+                    throw new FaultException<DataFormatFault>(new DataFormatFault($"Greska pri otvaranju arhivskih fajlova: {ex.Message}"));
                 }
                 sessionActive = true;
             }
