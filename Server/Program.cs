@@ -32,6 +32,12 @@ namespace Server
             service.OnOutOfBandWarning += (sender, e) =>
                 Console.WriteLine($"[OUT OF BAND] {e.Message}");
 
+            service.OnVPActSpike += (sender, e) =>
+                Console.WriteLine($"[VPAct SPIKE] {e.Message}");
+
+            service.OnVPDefSpike += (sender, e) =>
+                Console.WriteLine($"[VPDef SPIKE] {e.Message}");
+
             host.Open();
             Console.WriteLine("Server is running. Press any key to stop.");
             Console.ReadKey();

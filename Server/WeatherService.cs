@@ -33,6 +33,8 @@ namespace Server
         public event WeatherEventHandler OnWarningRaised;
         public event WeatherEventHandler OnPressureSpike;
         public event WeatherEventHandler OnOutOfBandWarning;
+        public event WeatherEventHandler OnVPActSpike;
+        public event WeatherEventHandler OnVPDefSpike;
 
         private readonly double P_THRESHOLD;
         private readonly double VPact_THRESHOLD;
@@ -41,9 +43,9 @@ namespace Server
 
         public WeatherService()
         {
-            P_THRESHOLD = double.Parse(ConfigurationManager.AppSettings["P_THRESHOLD"] ?? "5", CultureInfo.InvariantCulture);
-            VPact_THRESHOLD = double.Parse(ConfigurationManager.AppSettings["VPact_THRESHOLD"] ?? "3", CultureInfo.InvariantCulture);
-            VPdef_THRESHOLD = double.Parse(ConfigurationManager.AppSettings["VPdef_THRESHOLD"] ?? "3", CultureInfo.InvariantCulture);
+            P_THRESHOLD = double.Parse(ConfigurationManager.AppSettings["P_THRESHOLD"] ?? "0.2", CultureInfo.InvariantCulture);
+            VPact_THRESHOLD = double.Parse(ConfigurationManager.AppSettings["VPact_THRESHOLD"] ?? "0.15", CultureInfo.InvariantCulture);
+            VPdef_THRESHOLD = double.Parse(ConfigurationManager.AppSettings["VPdef_THRESHOLD"] ?? "0.3", CultureInfo.InvariantCulture);
             MEAN_DEVIATION = double.Parse(ConfigurationManager.AppSettings["MEAN_DEVIATION"] ?? "0.25", CultureInfo.InvariantCulture);
         }
 
@@ -139,6 +141,8 @@ namespace Server
 
             var previous = samples[samples.Count - 2];
 
+            // Analitika 1
+
             double deltaP = current.Pressure - previous.Pressure;
             if (Math.Abs(deltaP) > P_THRESHOLD)
             {
@@ -155,6 +159,26 @@ namespace Server
                 string msg = $"Pritisak van pojasa proseka ({direction}), P={current.Pressure:F2}, Pmean={pMean:F2}";
                 OnOutOfBandWarning?.Invoke(this, new WeatherEventArgs(current.Pressure, msg));
                 OnWarningRaised?.Invoke(this, new WeatherEventArgs(current.Pressure, msg));
+            }
+
+            // Analitika 2
+
+            double deltaVPact = current.VPact - previous.VPact;
+            if (Math.Abs(deltaVPact) > VPact_THRESHOLD)
+            {
+                string direction = deltaVPact > 0 ? "iznad ocekivanog" : "ispod ocekivanog";
+                string msg = $"Nagla promena VPact ({direction}), deltaVPact={deltaVPact:F2}";
+                OnVPActSpike?.Invoke(this, new WeatherEventArgs(current.VPact, msg));
+                OnWarningRaised?.Invoke(this, new WeatherEventArgs(current.VPact, msg));
+            }
+
+            double deltaVPdef = current.VPdef - previous.VPdef;
+            if (Math.Abs(deltaVPdef) > VPdef_THRESHOLD)
+            {
+                string direction = deltaVPdef > 0 ? "iznad ocekivanog" : "ispod ocekivanog";
+                string msg = $"Nagla promena VPdef ({direction}), deltaVPdef={deltaVPdef:F2}";
+                OnVPDefSpike?.Invoke(this, new WeatherEventArgs(current.VPdef, msg));
+                OnWarningRaised?.Invoke(this, new WeatherEventArgs(current.VPdef, msg));
             }
         }
 
