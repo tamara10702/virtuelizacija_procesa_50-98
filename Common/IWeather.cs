@@ -11,10 +11,18 @@ namespace Common
     public interface IWeather
     {
         [OperationContract]
+        [FaultContract(typeof(DataFormatFault))]
+        [FaultContract(typeof(ValidationFault))]
         void StartSession(string meta);
+
         [OperationContract]
+        [FaultContract(typeof(DataFormatFault))]
+        [FaultContract(typeof(ValidationFault))]
         void PushSample(WeatherSample sample);
+
         [OperationContract]
+        [FaultContract(typeof(DataFormatFault))]
+        [FaultContract(typeof(ValidationFault))]
         void EndSession();
     }
 }
